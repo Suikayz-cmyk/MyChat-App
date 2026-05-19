@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet,} from 'react-native';
+
 import {createUserWithEmailAndPassword,} from 'firebase/auth';
 import { auth } from '../firebase/config';
+
+import {doc, setDoc, serverTimestamp,} from 'firebase/firestore';
+import { db } from '../firebase/config';
 
 export default function LoginScreen({ navigation }) {
 
@@ -9,29 +13,34 @@ export default function LoginScreen({ navigation }) {
   const [password, setPassword] = useState('');
 
   const handleRegister = async () => {
+    if (!email || !password) {
+      alert('Email dan password wajib diisi');
+      return;
+    }
 
-  if (!email || !password) {
-    alert('Email dan password wajib diisi');
-    return;
-  }
-
-  try {
-
-    await createUserWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
-
-    alert('Register berhasil');
-
-  } catch (error) {
-
-    alert(error.message);
-
-  }
-
-};
+    try {
+      //Buat akun auth
+      const userCredential =
+        await createUserWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
+      const user = userCredential.user;
+      //Simpan profile ke Firestore
+      await setDoc(
+        doc(db, 'users', user.uid),
+        {
+          email: user.email,
+          createdAt: serverTimestamp(),
+        }
+      );
+      alert('Register berhasil');
+    } catch (error) {
+      console.log(error);
+      alert(error.message);
+    }
+  };
 
   return (
     <View style={styles.container}>

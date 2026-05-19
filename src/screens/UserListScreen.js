@@ -1,32 +1,89 @@
-import { View, Text, TouchableOpacity,} from 'react-native';
+import { useEffect, useState,} from 'react';
+import { View, Text, TouchableOpacity, FlatList, } from 'react-native';
 
 import { signOut } from 'firebase/auth';
-import { auth } from '../firebase/config';
+import { collection, getDocs,} from 'firebase/firestore';
+import { db, auth } from '../firebase/config';
 
 export default function UserListScreen() {
 
+  const [users, setUsers] = useState([]);
+
   const handleLogout = async () => {
     await signOut(auth);
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+
+    try {
+      const snapshot =
+        await getDocs(collection(db, 'users'));
+
+      const userList =
+        snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+      setUsers(userList);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
     <View
       style={{
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
+        padding: 20,
       }}
     >
-
-      <Text>
-        User List Screen
+      <Text
+        style={{
+          fontSize: 28,
+          fontWeight: 'bold',
+          marginBottom: 20,
+        }}
+      >
+        Users
       </Text>
 
-      <TouchableOpacity onPress={handleLogout}>
+      <FlatList
+        data={users}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+
+          <View
+            style={{
+              padding: 15,
+              borderWidth: 1,
+              borderColor: '#ddd',
+              borderRadius: 10,
+              marginBottom: 10,
+            }}
+          >
+
+            <Text>
+              {item.email}
+            </Text>
+
+          </View>
+
+        )}
+      />
+
+      <TouchableOpacity
+        onPress={handleLogout}
+      >
         <Text
           style={{
             marginTop: 20,
             color: 'red',
+            textAlign: 'center',
           }}
         >
           Logout
@@ -34,5 +91,6 @@ export default function UserListScreen() {
       </TouchableOpacity>
 
     </View>
+
   );
 }
