@@ -5,7 +5,7 @@ import { signOut } from 'firebase/auth';
 import { collection, getDocs,} from 'firebase/firestore';
 import { db, auth } from '../firebase/config';
 
-export default function UserListScreen() {
+export default function UserListScreen({navigation}) {
 
   const [users, setUsers] = useState([]);
 
@@ -23,11 +23,14 @@ export default function UserListScreen() {
       const snapshot =
         await getDocs(collection(db, 'users'));
 
-      const userList =
-        snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+      const userList = snapshot.docs
+      .map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }))
+      .filter(
+        user => user.id !== auth.currentUser.uid
+      );
 
       setUsers(userList);
     } catch (error) {
@@ -57,7 +60,16 @@ export default function UserListScreen() {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
 
-          <View
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate(
+                'Chat',
+                {
+                  selectedUser: item,
+                }
+              )
+            }
+
             style={{
               padding: 15,
               borderWidth: 1,
@@ -71,7 +83,7 @@ export default function UserListScreen() {
               {item.email}
             </Text>
 
-          </View>
+          </TouchableOpacity>
 
         )}
       />

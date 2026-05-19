@@ -14,6 +14,7 @@ import { auth } from '../firebase/config';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import UserListScreen from '../screens/UserListScreen';
+import ChatScreen from '../screens/ChatScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -51,10 +52,19 @@ export default function AppNavigator() {
 
         {user ? (
 
-          <Stack.Screen
-            name="Users"
-            component={UserListScreen}
-          />
+           <>
+
+              <Stack.Screen
+                name="Users"
+                component={UserListScreen}
+              />
+
+              <Stack.Screen
+                name="Chat"
+                component={ChatScreen}
+              />
+
+            </>
 
         ) : (
 
