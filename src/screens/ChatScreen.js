@@ -7,6 +7,7 @@ import {
   View,
   Text,
   StyleSheet,
+  Platform,
 } from 'react-native';
 
 import {
@@ -19,17 +20,16 @@ import {
 } from 'firebase/firestore';
 
 import { db, auth } from '../firebase/config';
+import { format, } from 'date-fns';
 
 export default function ChatScreen({ route, navigation }) {
 
   const { selectedUser } = route.params;
   const [messages, setMessages] = useState([]);
-
   const [inputText, setInputText] = useState('');
-
   const flatListRef = useRef(null);
-
   const currentUser = auth.currentUser;
+  const [loading, setLoading] = useState(true);
 
   const sendMessage = async () => {
     if (!inputText.trim()) return;
@@ -71,7 +71,6 @@ export default function ChatScreen({ route, navigation }) {
             ...doc.data(),
           }));
 
-        // FILTER CHAT KHUSUS 2 USER
         const filteredMessages =
           allMessages.filter(msg =>
             (
@@ -85,32 +84,54 @@ export default function ChatScreen({ route, navigation }) {
             )
           );
         setMessages(filteredMessages);
+        setLoading(false);
         setTimeout(() => {
-          flatListRef.current?.scrollToEnd();
+          flatListRef.current?.scrollToEnd({
+            animated: true,
+          });
         }, 100);
       }
     );
     return () => unsubscribe();
   }, []);
 
+ if (loading) {
+  return (
+    <View style={styles.loadingContainer}>
+      <Text>Loading chat...</Text>
+    </View>
+  );
+}
+
  return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior='padding'
+      behavior={
+        Platform.OS === 'ios'
+          ? 'padding'
+          : undefined
+      }
     >
-
+    <View style={styles.chatHeader}>
+      <Text style={styles.chatHeaderText}>
+        Chat dengan {selectedUser.email}
+      </Text>
+    </View>
       <FlatList
         ref={flatListRef}
         data={messages}
         keyExtractor={(item) => item.id}
-
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>
+              Belum ada pesan
+            </Text>
+          </View>
+        }
         renderItem={({ item }) => {
-
           const isMyMessage =
             item.senderId === currentUser.uid;
-
           return (
-
             <View
               style={[
                 styles.messageBubble,
@@ -120,7 +141,6 @@ export default function ChatScreen({ route, navigation }) {
                   : styles.otherMessage
               ]}
             >
-
               <Text
                 style={[
                   styles.messageText,
@@ -133,22 +153,28 @@ export default function ChatScreen({ route, navigation }) {
                 {item.text}
               </Text>
 
+              <Text style={styles.timestamp}>
+                {
+                  item.timestamp?.seconds
+                    ? format(
+                        new Date(
+                          item.timestamp.seconds * 1000
+                        ),
+                        'HH:mm'
+                      )
+                    : ''
+                }
+              </Text>
             </View>
-
           );
-
         }}
       />
 
       <View style={styles.inputContainer}>
-
         <TextInput
           style={styles.input}
-
           placeholder='Ketik pesan...'
-
           value={inputText}
-
           onChangeText={setInputText}
         />
 
@@ -162,16 +188,13 @@ export default function ChatScreen({ route, navigation }) {
           </Text>
 
         </TouchableOpacity>
-
       </View>
-
     </KeyboardAvoidingView>
 
   );
 }
 
 const styles = StyleSheet.create({
-
   container: {
     flex: 1,
   },
@@ -209,22 +232,28 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     padding: 10,
+    borderTopWidth: 1,
+    borderColor: '#eee',
+    backgroundColor: 'white',
   },
 
   input: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 10,
+    borderColor: '#ddd',
+    borderRadius: 25,
     paddingHorizontal: 15,
+    paddingVertical: 10,
+    backgroundColor: '#f5f5f5',
   },
 
   sendButton: {
     marginLeft: 10,
     backgroundColor: '#007AFF',
     justifyContent: 'center',
+    alignItems: 'center',
     paddingHorizontal: 20,
-    borderRadius: 10,
+    borderRadius: 25,
   },
 
   sendButtonText: {
@@ -232,4 +261,38 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  emptyContainer: {
+    marginTop: 50,
+    alignItems: 'center',
+  },
+
+  emptyText: {
+    color: 'gray',
+    fontSize: 16,
+  },
+
+  timestamp: {
+    fontSize: 11,
+    marginTop: 5,
+    opacity: 0.7,
+    color: 'white',
+    alignSelf: 'flex-end',
+  },
+
+  chatHeader: {
+    padding: 15,
+    borderBottomWidth: 1,
+    borderColor: '#eee',
+  },
+
+  chatHeaderText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });
