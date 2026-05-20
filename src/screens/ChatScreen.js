@@ -107,15 +107,31 @@ export default function ChatScreen({ route, navigation }) {
     <KeyboardAvoidingView
       style={styles.container}
       behavior={
-        Platform.OS === 'ios'
-          ? 'padding'
-          : undefined
+        Platform.OS === 'ios' ? 'padding' : undefined
       }
     >
     <View style={styles.chatHeader}>
       <Text style={styles.chatHeaderText}>
-        Chat dengan {selectedUser.email}
+        {selectedUser.email}
       </Text>
+      <Text
+  style={{
+    color:
+      selectedUser.isOnline
+        ? 'green'
+        : 'gray',
+
+    marginTop: 5,
+  }}
+>
+
+  {
+    selectedUser.isOnline
+      ? 'Online'
+      : 'Offline'
+  }
+
+</Text>
     </View>
       <FlatList
         ref={flatListRef}
@@ -295,4 +311,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+
+  
 });

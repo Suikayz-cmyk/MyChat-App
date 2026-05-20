@@ -9,7 +9,9 @@ import {
   onAuthStateChanged,
 } from 'firebase/auth';
 
-import { auth } from '../firebase/config';
+import { auth, db } from '../firebase/config';
+
+import { doc, updateDoc, serverTimestamp,} from 'firebase/firestore';
 
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
@@ -24,16 +26,44 @@ export default function AppNavigator() {
 
   const [loading, setLoading] = useState(true);
 
+   const updateUserStatus = async (
+    uid,
+    isOnline
+  ) => {
+
+    try {
+
+      await updateDoc(
+        doc(db, 'users', uid),
+        {
+          isOnline,
+          lastSeen: serverTimestamp(),
+        }
+      );
+
+    } catch (error) {
+
+      console.log(error);
+
+    }
+
+  };
+
   useEffect(() => {
 
     const unsubscribe = onAuthStateChanged(
       auth,
       (currentUser) => {
-
         setUser(currentUser);
-
         setLoading(false);
+          if (currentUser) {
+          updateUserStatus(
+            currentUser.uid,
+            true
+          );
+        }
       }
+    
     );
 
     return unsubscribe;
@@ -43,6 +73,8 @@ export default function AppNavigator() {
   if (loading) {
     return null;
   }
+
+ 
 
   return (
 

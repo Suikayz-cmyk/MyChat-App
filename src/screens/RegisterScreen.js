@@ -32,6 +32,7 @@ export default function LoginScreen({ navigation }) {
         doc(db, 'users', user.uid),
         {
           email: user.email,
+          isOnline: true,
           createdAt: serverTimestamp(),
         }
       );
