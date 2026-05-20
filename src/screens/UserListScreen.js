@@ -1,5 +1,5 @@
 import { useEffect, useState,} from 'react';
-import { View, Text, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, StyleSheet, Image} from 'react-native';
 
 import { signOut } from 'firebase/auth';
 import { collection, onSnapshot, doc, updateDoc, serverTimestamp } from 'firebase/firestore';

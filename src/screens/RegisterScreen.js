@@ -34,6 +34,7 @@ export default function LoginScreen({ navigation }) {
           email: user.email,
           isOnline: true,
           createdAt: serverTimestamp(),
+          photoURL:`https://api.dicebear.com/7.x/initials/png?seed=${email}`,
         }
       );
       alert('Register berhasil');
