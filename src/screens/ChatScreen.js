@@ -8,6 +8,7 @@ import {
   Text,
   StyleSheet,
   Platform,
+  Image,
 } from 'react-native';
 
 import {
@@ -52,7 +53,44 @@ export default function ChatScreen({ route, navigation }) {
 
   useEffect(() => {
     navigation.setOptions({
-        title: selectedUser.email,
+      headerTitle: () => (
+        <View style={styles.headerContainer}>
+
+          <Image
+            source={{
+              uri: selectedUser.photoURL,
+            }}
+            style={styles.headerAvatar}
+          />
+
+          <View>
+            <Text style={styles.headerName}>
+              {
+                selectedUser.name ||
+                selectedUser.email
+              }
+            </Text>
+
+            <Text
+              style={[
+                styles.headerStatus,
+                {
+                  color:
+                    selectedUser.isOnline
+                      ? 'green'
+                      : 'gray',
+                }
+              ]}
+            >
+              {
+                selectedUser.isOnline
+                  ? 'Online'
+                  : 'Offline'
+              }
+            </Text>
+          </View>
+        </View>
+      ),
     });
   }, []);
 
@@ -107,36 +145,24 @@ export default function ChatScreen({ route, navigation }) {
     <KeyboardAvoidingView
       style={styles.container}
       behavior={
-        Platform.OS === 'ios' ? 'padding' : undefined
+        Platform.OS === 'ios'
+          ? 'padding'
+          : 'height'
       }
+      keyboardVerticalOffset={90}
     >
-    <View style={styles.chatHeader}>
-      <Text style={styles.chatHeaderText}>
-        {selectedUser.email}
-      </Text>
-      <Text
-  style={{
-    color:
-      selectedUser.isOnline
-        ? 'green'
-        : 'gray',
 
-    marginTop: 5,
-  }}
->
-
-  {
-    selectedUser.isOnline
-      ? 'Online'
-      : 'Offline'
-  }
-
-</Text>
-    </View>
+    <View style={styles.chatContainer}>
       <FlatList
         ref={flatListRef}
         data={messages}
         keyExtractor={(item) => item.id}
+        keyboardShouldPersistTaps="handled"
+        
+        contentContainerStyle={{
+          paddingBottom: 20,
+        }}
+        
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>
@@ -185,6 +211,7 @@ export default function ChatScreen({ route, navigation }) {
           );
         }}
       />
+     </View>
 
       <View style={styles.inputContainer}>
         <TextInput
@@ -230,7 +257,7 @@ const styles = StyleSheet.create({
 
   otherMessage: {
     alignSelf: 'flex-start',
-    backgroundColor: '#ddd',
+    backgroundColor: '#aeaeae',
   },
 
   messageText: {
@@ -251,6 +278,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderColor: '#eee',
     backgroundColor: 'white',
+    alignItems: 'center',
   },
 
   input: {
@@ -269,7 +297,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
-    borderRadius: 25,
+    paddingVertical: 10,
+    borderRadius: 999,
   },
 
   sendButtonText: {
@@ -312,5 +341,30 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
+  chatContainer: {
+    flex: 1,
+    padding: 10,
+  },
+
+  headerContainer: {
+  flexDirection: 'row',
+  alignItems: 'center',
+},
+
+headerAvatar: {
+  width: 40,
+  height: 40,
+  borderRadius: 20,
+  marginRight: 10,
+},
+
+headerName: {
+  fontSize: 16,
+  fontWeight: 'bold',
+},
+
+headerStatus: {
+  fontSize: 12,
+},
   
 });
