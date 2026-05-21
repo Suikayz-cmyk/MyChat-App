@@ -4,79 +4,9 @@ import { View, Text, TouchableOpacity, FlatList, StyleSheet, Image} from 'react-
 import { signOut } from 'firebase/auth';
 import { collection, onSnapshot, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '../firebase/config';
-import * as ImagePicker from 'expo-image-picker';
-import { ref, uploadBytes, getDownloadURL,} from 'firebase/storage';
-import { storage } from '../firebase/config';
 
 export default function UserListScreen({navigation}) {
   const [users, setUsers] = useState([]);
-
-  const pickImage = async () => {
-    try {
-      const permission =
-        await ImagePicker
-          .requestMediaLibraryPermissionsAsync();
-      if (!permission.granted) {
-        alert('Izin galeri diperlukan');
-        return;
-      }
-
-      const result =
-        await ImagePicker
-          .launchImageLibraryAsync({
-            mediaTypes: ['images'],
-            allowsEditing: true,
-            aspect: [1, 1],
-            quality: 0.8,
-          });
-      if (result.canceled) return;
-      uploadProfilePhoto(
-        result.assets[0].uri
-      );
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  const uploadProfilePhoto = async (
-      imageUri
-    ) => {
-      try {
-        const response =
-          await fetch(imageUri);
-        const blob =
-          await response.blob();
-        const storageRef = ref(
-          storage,
-          `profiles/${auth.currentUser.uid}.jpg`
-        );
-
-        await uploadBytes(
-          storageRef,
-          blob
-        );
-
-        const downloadURL =
-          await getDownloadURL(storageRef);
-
-        await updateDoc(
-          doc(
-            db,
-            'users',
-            auth.currentUser.uid
-          ),
-          {
-            photoURL: downloadURL,
-          }
-        );
-        alert('Foto profil berhasil diupload');
-      } catch (error) {
-        console.log(error);
-        alert(
-          'Firebase Storage buth upgrade plan'
-        );
-      }
-    };
 
   const handleLogout = async () => {
     try {
@@ -116,20 +46,14 @@ export default function UserListScreen({navigation}) {
 
 return (
     <View style={styles.container}>
-      <Text style={styles.title}>
-        Users
+      <View style={styles.header}>
+      <Text style={styles.appTitle}>
+        MyChatApp
       </Text>
-
-      <TouchableOpacity
-        style={styles.uploadButton}
-        onPress={pickImage}
-      >
-
-        <Text style={styles.uploadButtonText}>
-          Upload Foto Profil
-        </Text>
-
-      </TouchableOpacity>
+      <Text style={styles.subTitle}>
+        Chats
+      </Text>
+    </View>
 
       <FlatList
         data={users}
@@ -145,54 +69,66 @@ return (
                 }
               )
             }
+
             style={styles.userCard}
           >
+
             {
               item.photoURL && (
+
                 <Image
                   source={{
                     uri: item.photoURL,
                   }}
-
-                  style={{
-                    width: 50,
-                    height: 50,
-                    borderRadius: 25,
-                    marginBottom: 10,
-                  }}
+                  style={styles.avatar}
                 />
 
               )
             }
 
-            <Text style={styles.userEmail}>
-              {item.email}
-            </Text>
+            <View style={styles.userInfo}>
 
-            <Text
-              style={[
-                styles.statusText,
-                item.isOnline
-                  ? styles.onlineText
-                  : styles.offlineText
-              ]}
-            >
-              {
-                item.isOnline
-                  ? 'Online'
-                  : 'Offline'
-              }
-            </Text>
+              <Text style={styles.userName}>
+                {item.name || 'Unknown'}
+              </Text>
+
+              <Text
+                style={[
+                  styles.statusText,
+
+                  item.isOnline
+                    ? styles.onlineText
+                    : styles.offlineText
+                ]}
+              >
+
+                {
+                  item.isOnline
+                    ? 'Online'
+                    : 'Offline'
+                }
+
+              </Text>
+
+              <Text style={styles.userEmail}>
+                {item.email}
+              </Text>
+
+            </View>
+
           </TouchableOpacity>
         )}
       />
 
       <TouchableOpacity
+        style={styles.logoutButton}
         onPress={handleLogout}
       >
-        <Text style={styles.logoutText}>
+
+        <Text style={styles.logoutButtonText}>
           Logout
         </Text>
+
       </TouchableOpacity>
     </View>
   );
@@ -205,56 +141,89 @@ const styles = StyleSheet.create({
     padding: 20,
   },
 
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
+  header: {
+      marginBottom: 25,
+    },
 
-  userCard: {
-    padding: 15,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 10,
-    marginBottom: 10,
-    backgroundColor: 'white',
-  },
+    appTitle: {
+      fontSize: 32,
+      fontWeight: 'bold',
+    },
 
-  userEmail: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
+    subTitle: {
+      marginTop: 5,
+      fontSize: 18,
+      color: 'gray',
+    },
 
-  statusText: {
-    marginTop: 5,
-  },
+    userCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
 
-  onlineText: {
-    color: 'green',
-  },
+      padding: 15,
 
-  offlineText: {
-    color: 'gray',
-  },
+      backgroundColor: 'white',
 
-  logoutText: {
-    marginTop: 20,
-    color: 'red',
-    textAlign: 'center',
-    fontWeight: 'bold',
-  },
+      borderRadius: 15,
 
-  uploadButton: {
-    backgroundColor: '#007AFF',
-    padding: 12,
-    borderRadius: 10,
-    marginBottom: 20,
-    alignItems: 'center',
-  },
+      marginBottom: 12,
 
-  uploadButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
+      shadowColor: '#000',
+      shadowOpacity: 0.05,
+      shadowRadius: 5,
 
+      elevation: 2,
+    },
+
+    avatar: {
+      width: 60,
+      height: 60,
+      borderRadius: 30,
+    },
+
+    userInfo: {
+      marginLeft: 15,
+      flex: 1,
+    },
+
+    userName: {
+      fontSize: 18,
+      fontWeight: 'bold',
+    },
+
+    userEmail: {
+      marginTop: 4,
+      color: 'gray',
+      fontSize: 13,
+    },
+
+    statusText: {
+      marginTop: 2,
+      fontSize: 13,
+    },
+
+    onlineText: {
+      color: 'green',
+    },
+
+    offlineText: {
+      color: 'gray',
+    },
+
+    logoutButton: {
+      alignSelf: 'center',
+      marginTop: 10,
+      backgroundColor: '#ff3b30',
+      paddingVertical: 10,
+      paddingHorizontal: 30,
+      borderRadius: 999,
+      alignItems: 'center',
+      opacity: 0.9,
+    },
+
+    logoutButtonText: {
+      color: 'white',
+      fontWeight: 'bold',
+      fontSize: 12,
+    },
 });
